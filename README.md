@@ -7,7 +7,8 @@ Step 1 - "python -m venv venv"
 Step 2 - "venv/scripts/activate" or "source venv/bin/activate" on mac
 
 Step 3 - "pip install panda-gym stable_baselines3 stable-baselines3[extra] sb3_contrib opencv-python tensorboard tensorflow torchvision opencv-python pycocotools matplotlib onnxruntime onnx"
-       - "pip install git+https://github.com/facebookresearch/segment-anything.git"
+
+Step 4 - "pip install git+https://github.com/facebookresearch/segment-anything.git"
 
 Then it should work correctly
 
