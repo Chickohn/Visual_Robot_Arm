@@ -1,0 +1,6 @@
+/venv/
+/__pycache__/
+/logs/
+/Saved_Models/
+/trained_models/
+/sam_vit_h.pth/

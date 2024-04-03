@@ -1,0 +1,99 @@
+import gymnasium as gym
+import panda_gym
+from stable_baselines3 import DDPG
+from time import sleep
+from panda_gym.envs.core import RobotTaskEnv
+from panda_gym.envs.robots.panda import Panda
+from panda_gym.envs.core import Task
+from panda_gym.pybullet import PyBullet
+import pybullet as p
+import cv2
+import numpy as np
+from test_flip_task_code import MyTask
+
+from segment_anything import SamPredictor, sam_model_registry, SamAutomaticMaskGenerator
+import torch
+import matplotlib.pyplot as plt
+
+def show_anns(anns):
+    if len(anns) == 0:
+        return
+    sorted_anns = sorted(anns, key=(lambda x: x['area']), reverse=True)
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+
+    img = np.ones((sorted_anns[0]['segmentation'].shape[0], sorted_anns[0]['segmentation'].shape[1], 4))
+    img[:,:,3] = 0
+    for ann in sorted_anns:
+        m = ann['segmentation']
+        color_mask = np.concatenate([np.random.random(3), [0.35]])
+        img[m] = color_mask
+    ax.imshow(img)
+
+sam = sam_model_registry["default"](checkpoint="sam_vit_h.pth")
+predictor = SamPredictor(sam)
+mask_generator = SamAutomaticMaskGenerator(sam)
+
+
+class MyRobotTaskEnv(RobotTaskEnv):
+    """My robot-task environment."""
+
+    def __init__(self, render_mode):
+        sim = PyBullet(render_mode=render_mode)
+        robot = Panda(sim, block_gripper=False, base_position=np.array([-0.6, 0.0, 0.0]), control_type= "ee")
+        task = MyTask(sim)
+        super().__init__(robot, task)
+
+    def render_camera(self):
+        joint_pos, joint_ori = p.getLinkState(0, linkIndex=1)[:2]
+        # Define the camera settings
+        offset = 0.2  # Raise the camera 20cm above the joint
+        camera_pos = [joint_pos[0], joint_pos[1], joint_pos[2] + offset]
+        # print(camera_pos)
+        # camera_pos = [1, 1, 1]  # Example position
+        target_pos = [0, 0, 0]  # Point the camera looks at
+        up_vector = [0, 0, 1]
+        view_matrix = p.computeViewMatrix(camera_pos, target_pos, up_vector)
+
+        # Define Field of View and other camera parameters
+        fov = 60
+        aspect = 1
+        near_val = 0.5
+        far_val = 3
+        projection_matrix = p.computeProjectionMatrixFOV(fov, aspect, near_val, far_val)
+
+        # Get the camera image
+        width, height, rgb_img, depth_img, seg_img = p.getCameraImage(width=640, height=480, viewMatrix=view_matrix, projectionMatrix=projection_matrix)
+
+        # Convert the image to a format OpenCV can use and show it
+        np_img = np.reshape(rgb_img, (height, width, 4))
+        frame = np_img # cv2.imread(np_img)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        print("pre mask")
+        masks = mask_generator.generate(frame)
+        print("post mask")
+        plt.figure(figsize=(20,20))
+        plt.imshow(frame)
+        show_anns(masks)
+        plt.axis('off')
+        plt.show()
+        # cv2.imshow("Camera View", np_img)
+        cv2.waitKey(1)
+
+env = MyRobotTaskEnv(render_mode="human")
+
+observation, info = env.reset()
+for _ in range(10000):
+    action = env.action_space.sample()
+    try:
+        observation, reward, terminated, truncated, info = env.step(action)
+    except:
+        break
+
+    # Render camera image
+    env.render_camera()
+
+    if terminated or truncated:
+        observation, info = env.reset()
+
+cv2.destroyAllWindows()
