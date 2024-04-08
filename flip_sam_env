@@ -9,7 +9,7 @@ from panda_gym.pybullet import PyBullet
 import pybullet as p
 import cv2
 import numpy as np
-from test_flip_task_code import MyTask
+from custom_flip_task import MyTask
 
 from segment_anything import SamPredictor, sam_model_registry, SamAutomaticMaskGenerator
 import torch

@@ -13,7 +13,7 @@ class CustomReachTask(Task):
         self,
         sim,
         get_ee_position,
-        reward_type="dense",
+        reward_type="sparse",
         distance_threshold=0.05,
         goal_range=0.3,
         beaker_files_folder="Beaker_Files",
@@ -25,9 +25,8 @@ class CustomReachTask(Task):
         self.goal_range_low = np.array([-goal_range / 2, -goal_range / 2, 0.005])
         self.goal_range_high = np.array([goal_range / 2, goal_range / 2, 0.005])
         self.beaker_files_folder = beaker_files_folder
-        self.beaker_files = ["Beaker_500ml.obj"]
-            #"beaker_250ml_inst.usda", "beaker_250ml.usda", "beaker_500ml_inst_mesh.usda", "beaker_500ml_inst.usda", "beaker_500ml.usda", "beaker_500ml.usd"]
-        self.current_beaker_id = None  # Track the current beaker's PyBullet ID
+        self.beaker_files = ["Beaker_500ml.obj"] # "beaker_250ml_inst.usda", "beaker_250ml.usda", "beaker_500ml_inst_mesh.usda", "beaker_500ml_inst.usda", "beaker_500ml.usda", "beaker_500ml.usd"]
+        self.current_beaker_id = None
         self.prev_distance_to_goal = None
         with self.sim.no_rendering():
             self._create_scene()
@@ -56,21 +55,15 @@ class CustomReachTask(Task):
         return observation
 
     def get_achieved_goal(self) -> np.ndarray:
-        ee_position = np.array(self.get_ee_position())
-        return ee_position
+        target_position = np.array(self.sim.get_base_position("target"))
+        return target_position
 
     def reset(self) -> None:
-        super().reset()  # Ensure any existing reset logic is called
+        super().reset()
         self.goal = self._sample_goal()
         object_position = self._sample_object()
         self.sim.set_base_pose("object", object_position, np.array([1.0, 0.0, 0.0, 1.0]))
-        # After resetting, calculate and store the initial distance to the goal
         self.prev_distance_to_goal = np.linalg.norm(self.goal - self.get_achieved_goal())
-
-        # self.goal = self._sample_goal()
-        # object_position = self._sample_object()
-        # # print("object position: ", object_position)
-        # self.sim.set_base_pose("object", object_position, np.array([1.0, 0.0, 0.0, 1.0]))
 
     def _sample_goal(self) -> np.ndarray:
         """Randomize goal."""
@@ -89,35 +82,34 @@ class CustomReachTask(Task):
     
     def is_success(self, achieved_goal: np.ndarray, desired_goal: np.ndarray) -> np.ndarray:
         d = distance(achieved_goal, desired_goal)
-        print(d, d < self.distance_threshold)
         return np.array(d < self.distance_threshold, dtype=bool)
 
     def compute_reward(self, achieved_goal, desired_goal, info: Dict[str, Any]) -> np.ndarray:
-        # Calculate the current distance to the goal
-        current_distance = np.linalg.norm(desired_goal - achieved_goal)
-        
-        if self.reward_type == "dense":
-            # Reward is positive if moving closer to the goal, negative otherwise
-            reward = self.prev_distance_to_goal - current_distance
-        else:  # For sparse reward, keep your existing logic
-            reward = -np.array(current_distance > self.distance_threshold, dtype=np.float32)
-        
-        # Update the previous distance for the next step
-        self.prev_distance_to_goal = current_distance
-        
-        return np.array(reward, dtype=np.float32)
-        # d = distance(achieved_goal, desired_goal)
-        # if self.reward_type == "sparse":
-        #     return -np.array(d > self.distance_threshold, dtype=np.float32)
-        # else:
-        #     return -d.astype(np.float32)
+        if self.is_success(achieved_goal, desired_goal):
+            return 1.0
+        else:
+            current_distance = np.linalg.norm(desired_goal - achieved_goal)
+            
+            if self.reward_type == "dense":
+                reward = self.prev_distance_to_goal - current_distance
+            else:
+                reward = -np.array(current_distance > self.distance_threshold, dtype=np.float32)
+            
+            self.prev_distance_to_goal = current_distance
+            
+            return np.array(reward, dtype=np.float32)
+            # d = distance(achieved_goal, desired_goal)
+            # if self.reward_type == "sparse":
+            #     return -np.array(d > self.distance_threshold, dtype=np.float32)
+            # else:
+            #     return -d.astype(np.float32)
 
 class CustomReachEnv(RobotTaskEnv):
 
     def __init__(
         self,
         render_mode: str = "rgb_array",
-        reward_type: str = "dense",
+        reward_type: str = "sparse",
         control_type: str = "ee",
         renderer: str = "Tiny",
         render_width: int = 720,
@@ -146,15 +138,15 @@ class CustomReachEnv(RobotTaskEnv):
     def get_task_goal_position(self) -> np.ndarray:
         return self.task.get_goal_position()
 
-env = CustomReachEnv(render_mode="human")
+# env = CustomReachEnv(render_mode="human")
 
-observation, info = env.reset()
+# observation, info = env.reset()
 
-for _ in range(10000):
-    action = env.action_space.sample() # random action
-    # action = env.get_task_goal_position() - env.robot.get_ee_position()
-    # print(env.get_task_goal_position(), env.robot.get_ee_position())
-    observation, reward, terminated, truncated, info = env.step(action)
+# for _ in range(1000):
+#     action = env.action_space.sample() # random action
+#     # action = env.get_task_goal_position() - env.robot.get_ee_position()
+#     # print(env.get_task_goal_position(), env.robot.get_ee_position())
+#     observation, reward, terminated, truncated, info = env.step(action)
 
-    if terminated or truncated:
-        observation, info = env.reset()
+#     if terminated or truncated:
+#         observation, info = env.reset()

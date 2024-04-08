@@ -6,7 +6,7 @@ from panda_gym.envs.core import RobotTaskEnv
 from panda_gym.envs.robots.panda import Panda
 from panda_gym.pybullet import PyBullet
 
-from test_reach_task_code import CustomReachTask
+from custom_reach import CustomReachTask
 
 class CustomReachEnv(RobotTaskEnv):
 

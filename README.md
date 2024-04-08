@@ -8,7 +8,7 @@ Step 2 - "venv/scripts/activate" or "source venv/bin/activate" on mac
 
 Step 3 - "pip install panda-gym stable_baselines3 stable-baselines3[extra] sb3_contrib opencv-python tensorboard tensorflow torchvision opencv-python pycocotools matplotlib onnxruntime onnx"
 
-Step 4 - "pip install git+https://github.com/facebookresearch/segment-anything.git"
+Step 4 - If using 'flip_sam_env' then enter "pip install git+https://github.com/facebookresearch/segment-anything.git" into console
 
 Then it should work correctly
 
@@ -25,7 +25,6 @@ Notes for meeting:
 
 
 mobile SAM/ Fast SAM
-erikaa wang panda robot task github
 
 
 Completed:
