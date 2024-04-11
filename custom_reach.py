@@ -137,6 +137,36 @@ class CustomReachEnv(RobotTaskEnv):
         
     def get_task_goal_position(self) -> np.ndarray:
         return self.task.get_goal_position()
+###################################################################################################################
+#### Potential Alternative to RobotTaskEnv ####
+#import numpy as np
+
+#import sys
+#sys.path.append("..")
+
+#from custom_envs.envs.tasks.My_reach_fixed import My_Reach_Fixed
+
+#from panda_gym.envs.core import RobotTaskEnv
+#from panda_gym.pybullet import PyBullet
+
+
+#class My_PandaReachFixedEnv(RobotTaskEnv):
+#    """Reach task wih Panda robot.
+
+#    Args:
+#        render (bool, optional): Activate rendering. Defaults to False.
+#        reward_type (str, optional): "sparse" or "dense". Defaults to "sparse".
+#        control_type (str, optional): "ee" to control end-effector position or "joints" to control joint values.
+#            Defaults to "ee".
+#    """
+#
+#    def __init__(self, render: bool = True, reward_type: str = "sparse", control_type: str = "ee") -> None:
+#        sim = PyBullet(render=render)
+#        robot = Panda_scraper(sim, base_position=np.array([-0.6, 0.0, 0.0]), control_type=control_type)
+#        task = My_Reach_Fixed(sim, reward_type=reward_type, get_ee_position=robot.get_ee_position)
+#        super().__init__(robot, task)
+
+###################################################################################################################
 
 # env = CustomReachEnv(render_mode="human")
 
