@@ -1,5 +1,16 @@
 /venv/*
-!venv/Lib/site-packages/panda_gym/envs/tasks/pick_and_place.py/
+/venv/Lib/*
+!venv/Lib/
+/venv/Lib/site-packages/*
+!venv/Lib/site-packages/
+/venv/Lib/site-packages/panda_gym/*
+!venv/Lib/site-packages/panda_gym/
+/venv/Lib/site-packages/panda_gym/envs/*
+!venv/Lib/site-packages/panda_gym/envs/
+/venv/Lib/site-packages/panda_gym/envs/tasks/*
+!venv/Lib/site-packages/panda_gym/envs/tasks/
+!venv/Lib/site-packages/panda_gym/envs/tasks/pick_and_place.py
+!venv/Lib/site-packages/panda_gym/envs/panda_tasks.py
 /venv2/
 /__pycache__/
 /logs/
