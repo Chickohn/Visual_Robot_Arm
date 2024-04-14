@@ -27,10 +27,12 @@ from custom_reach import CustomReachEnv
 # env = CustomReachEnv(render_mode="human")
 
 ### Uncomment the following to switch to the built-in panda reach environment.
-# env = gym.make('PandaReachDense-v3', render_mode="human")
-env = gym.make('PandaStack-v3', render_mode="human")
-# env = gym.make('PandaCustom-v3', render_mode='human')
+# env = gym.make('PandaReach-v3', render_mode="human")
+env = gym.make('PandaPickAndPlace-v3', render_mode="human")
+# env = gym.make('PandaSlide-v3', render_mode='human')
 # print(env.action_space)
+
+
 # observation, info = env.reset()
 
 # import re
@@ -82,11 +84,8 @@ env = gym.make('PandaStack-v3', render_mode="human")
 #         env.close()
 #         break
 #     action = parse_action(action)
-#     print(action)
 #     observation, reward, terminated, truncated, info = env.step(action)
-#     print(env.get_local_grip_position())
-#     print(info)
-#     print(reward)
+#     # print(env.get_local_grip_position())
     
 #     if terminated or truncated:
 #         observation, info = env.reset()
@@ -110,29 +109,35 @@ action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n
 model = DDPG("MultiInputPolicy", 
              env, 
              action_noise=action_noise, 
-             replay_buffer_class=HerReplayBuffer, 
+            #  replay_buffer_class=HerReplayBuffer,
              verbose=1, 
-             batch_size= 128, 
+             batch_size= 256,
              buffer_size=1_000_000, 
              learning_rate=0.001, 
-             tensorboard_log=log_dir)
+             tensorboard_log=log_dir
+             )
 
-# model = DDPG.load(("ddpg_model_05_00.zip"), env=env)
+# model = DDPG.load(("ddpg_model_18_38.zip"), env=env)
 # model.load_replay_buffer("ddpg_buffer_1712786288.0423434")
+
+
 
 model.learn(total_timesteps=50_000)
 
-# from datetime import datetime
+from datetime import datetime
 
-# # Get the current time
-# now = datetime.now()
+# Get the current time
+now = datetime.now()
 
-# # Format the time to include only hours and minutes
-# current_time = now.strftime("%H:%M")
-# current_time = current_time[:2]+'_'+current_time[-2:]
-# print(current_time)
+# Format the time to include only hours and minutes
+current_time = now.strftime("%H:%M")
+current_time = current_time[:2]+'_'+current_time[-2:]
+print(current_time)
 
-# model.save("ddpg_model_"+current_time)
+model.save("models/ddpg_model_"+current_time)
+
+
+
 # model.save_replay_buffer("ddpg_buffer_"+current_time)
 
 # model = DDPG.load("ddpg_model_05_00.zip", env=env)
