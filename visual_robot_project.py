@@ -105,24 +105,25 @@ env = make_vec_env(lambda: env, n_envs=1)
 n_actions = env.action_space.shape[-1]
 action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
 
+
 # Create the DDPG model
 model = DDPG("MultiInputPolicy", 
              env, 
              action_noise=action_noise, 
-            #  replay_buffer_class=HerReplayBuffer,
+             replay_buffer_class=HerReplayBuffer,
              verbose=1, 
              batch_size= 256,
-             buffer_size=1_000_000, 
+             buffer_size=50_000, 
              learning_rate=0.001, 
              tensorboard_log=log_dir
              )
 
-# model = DDPG.load(("ddpg_model_18_38.zip"), env=env)
+# model = DDPG.load(("ddpg_model_23_09"), env=env)
 # model.load_replay_buffer("ddpg_buffer_1712786288.0423434")
 
 
 
-model.learn(total_timesteps=50_000)
+model.learn(total_timesteps=15_000)
 
 from datetime import datetime
 
@@ -142,7 +143,7 @@ model.save("models/ddpg_model_"+current_time)
 
 # model = DDPG.load("ddpg_model_05_00.zip", env=env)
 
-mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=5)
+mean_reward, std_reward = evaluate_policy(model, model.get_env(), return_episode_rewards=True, n_eval_episodes=5)
 
 print(f"Mean reward: {mean_reward}, Std reward: {std_reward}")
 
