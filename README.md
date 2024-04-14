@@ -12,9 +12,17 @@ Step 4 - If using 'flip_sam_env' then enter "pip install git+https://github.com/
 
 Then it should work correctly
 
-To load the tensorboard logs: "tensorboard --logdir=./logs/"
+To load the tensorboard logs: "python -m tensorboard.main --logdir=./logs/"
 
 ------------------------------------------------------------------
+Steps to complete still:
+- Train to pick up and move a beaker
+    - Set up subgoals so that it first goes above the beaker, then opens it's gripper, then moves down to the middle, then lifts it up and moves it to the target.
+- put particles in beaker and pour them into target beaker
+- Integrate computer vision into training.
+- Create GUI for proof of concept.
+
+
 
 Notes for meeting:
 

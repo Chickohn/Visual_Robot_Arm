@@ -1,4 +1,5 @@
-/venv/
+/venv/*
+!venv/Lib/site-packages/panda_gym/envs/tasks/pick_and_place.py/
 /venv2/
 /__pycache__/
 /logs/
