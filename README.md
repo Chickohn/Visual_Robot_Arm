@@ -57,3 +57,10 @@ To do:
 - Train the robot to look at the camera data instead and be able to pick things up using that data instead
 - Store a trained model
 - Test the model on the new environment containing the beakers
+
+
+
+notes for write-up:
+
+- Real Life camera would likely pick up more objects in a lab, would increase processing time
+- 
