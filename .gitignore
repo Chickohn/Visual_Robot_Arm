@@ -1,18 +1,24 @@
-/venv/*
-/venv/Lib/*
-!venv/Lib/
-/venv/Lib/site-packages/*
-!venv/Lib/site-packages/
-/venv/Lib/site-packages/panda_gym/*
-!venv/Lib/site-packages/panda_gym/
-/venv/Lib/site-packages/panda_gym/envs/*
-!venv/Lib/site-packages/panda_gym/envs/
-/venv/Lib/site-packages/panda_gym/envs/tasks/*
-!venv/Lib/site-packages/panda_gym/envs/tasks/
-!venv/Lib/site-packages/panda_gym/envs/tasks/pick_and_place.py
-!venv/Lib/site-packages/panda_gym/envs/panda_tasks.py
-/FastSAM/
-/venv2/
+# Ignore everything in the venv directory
+/venv/**
+
+# Except the directory structure leading to the files you want to keep
+!/venv/Lib/site-packages/panda_gym/
+!/venv/Lib/site-packages/panda_gym/envs/
+!/venv/Lib/site-packages/panda_gym/envs/tasks/
+!/venv/Lib/site-packages/panda_gym/envs/tasks/pick_and_place.py
+!/venv/Lib/site-packages/panda_gym/envs/panda_tasks.py
+
+# Ignore everything in the FastSAM directory
+/FastSAM/**
+
+# Except the directory structure leading to the files you want to keep
+!/FastSAM/Lib/site-packages/panda_gym/
+!/FastSAM/Lib/site-packages/panda_gym/envs/
+!/FastSAM/Lib/site-packages/panda_gym/envs/tasks/
+!/FastSAM/Lib/site-packages/panda_gym/envs/tasks/pick_and_place.py
+!/FastSAM/Lib/site-packages/panda_gym/envs/panda_tasks.py
+
+# Ignore other non-relevant directories and files
 /__pycache__/
 /logs/
 /Saved_Models/
