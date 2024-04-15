@@ -129,20 +129,7 @@ model = DDPG("MultiInputPolicy",
 
 
 
-model.learn(total_timesteps=50_000)
-
-from datetime import datetime
-
-# Get the current time
-now = datetime.now()
-
-# Format the time to include only hours and minutes
-current_time = now.strftime("%H:%M")
-current_time = current_time[:2]+'_'+current_time[-2:]
-print(current_time)
-
-model.save("models/ddpg_model_"+current_time)
-
+model.learn(total_timesteps=1_000)
 
 
 # model.save_replay_buffer("ddpg_buffer_"+current_time)
@@ -157,15 +144,29 @@ print(f"Mean reward: {mean_reward}, Std reward: {std_reward}")
 observation = env.reset()
 for i in range(1000):
     action, _states = model.predict(observation, deterministic=True)
-    # try:
+
     observation, reward, done, info = env.step(action)
     if done:
         observation = env.reset()
-    # except:
-    #     pass
-        # print(env.step(action))
 
 env.close()
+
+# Naming and Saving the file
+from inputimeout import inputimeout, TimeoutOccurred
+from datetime import datetime
+
+now = datetime.now()
+
+current_time = now.strftime("%H:%M")
+current_time = current_time[:2]+'_'+current_time[-2:]
+print(current_time)
+
+try:
+    model_name = inputimeout(prompt="Name the model: ", timeout=120)
+except TimeoutOccurred:
+    model_name = "DDPG_Model_"+current_time
+
+model.save("models/"+ model_name)
 
 
 # if os.path.exists(model_path):
