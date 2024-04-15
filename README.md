@@ -63,4 +63,4 @@ To do:
 notes for write-up:
 
 - Real Life camera would likely pick up more objects in a lab, would increase processing time
-- 
+- Could it in theory learn that the colored pixels in the image line up with the initial location of the beaker and since the starting point of the end effector is always the same then it would eventually only need the picture by the end of it.
