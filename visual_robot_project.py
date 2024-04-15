@@ -21,15 +21,11 @@ from sb3_contrib.common.wrappers import TimeFeatureWrapper
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 
-from custom_reach import CustomReachEnv
-
-# Create the environment
-# env = CustomReachEnv(render_mode="human")
+from Camera_Environment import CameraBeakerEnv
 
 ### Uncomment the following to switch to the built-in panda reach environment.
-# env = gym.make('PandaReach-v3', render_mode="human")
 env = gym.make('PandaPickAndPlace-v3', render_mode="human")
-# env = gym.make('PandaSlide-v3', render_mode='human')
+# env = CameraBeakerEnv(render_mode="human")
 # print(env.action_space)
 
 
@@ -103,39 +99,41 @@ os.makedirs(log_dir, exist_ok=True)
 env = make_vec_env(lambda: env, n_envs=1)
 
 n_actions = env.action_space.shape[-1]
-action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
+action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=1.1 * np.ones(n_actions))
 
 
 # Create the DDPG model
-model = DDPG("MultiInputPolicy", 
-             env, 
-             action_noise=action_noise, 
-             replay_buffer_class=HerReplayBuffer,
-             verbose=1, 
-             batch_size= 256,
-             buffer_size=50_000, 
-             learning_rate=0.001, 
-             tensorboard_log=log_dir
-             )
+# model = DDPG("MultiInputPolicy", 
+#              env, 
+#              action_noise=action_noise, 
+#              replay_buffer_class=HerReplayBuffer,
+#              verbose=1, 
+#              batch_size= 512,
+#              buffer_size=50_000, 
+#              learning_rate=0.001, 
+#              tensorboard_log=log_dir
+#              )
 
-# model = DDPG.load(("ddpg_model_23_09"), env=env)
+model = DDPG.load(("models/ddpg_model_18_38"), env=env)
+# model.batch_size = 512
+# model.action_noise = action_noise
 # model.load_replay_buffer("ddpg_buffer_1712786288.0423434")
 
 
 
-model.learn(total_timesteps=15_000)
+# model.learn(total_timesteps=50_000)
 
-from datetime import datetime
+# from datetime import datetime
 
-# Get the current time
-now = datetime.now()
+# # Get the current time
+# now = datetime.now()
 
-# Format the time to include only hours and minutes
-current_time = now.strftime("%H:%M")
-current_time = current_time[:2]+'_'+current_time[-2:]
-print(current_time)
+# # Format the time to include only hours and minutes
+# current_time = now.strftime("%H:%M")
+# current_time = current_time[:2]+'_'+current_time[-2:]
+# print(current_time)
 
-model.save("models/ddpg_model_"+current_time)
+# model.save("models/ddpg_model_"+current_time)
 
 
 

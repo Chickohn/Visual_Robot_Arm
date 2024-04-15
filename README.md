@@ -10,6 +10,8 @@ Step 3 - "pip install panda-gym stable_baselines3 stable-baselines3[extra] sb3_c
 
 Step 4 - If using 'flip_sam_env' then enter "pip install git+https://github.com/facebookresearch/segment-anything.git" into console
 
+git clone https://github.com/CASIA-IVA-Lab/FastSAM.git
+
 Then it should work correctly
 
 To load the tensorboard logs: "python -m tensorboard.main --logdir=./logs/"

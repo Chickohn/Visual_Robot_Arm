@@ -11,9 +11,11 @@
 !venv/Lib/site-packages/panda_gym/envs/tasks/
 !venv/Lib/site-packages/panda_gym/envs/tasks/pick_and_place.py
 !venv/Lib/site-packages/panda_gym/envs/panda_tasks.py
+/FastSAM/
 /venv2/
 /__pycache__/
 /logs/
 /Saved_Models/
 /trained_models/
 /sam_vit_h.pth/
+/weights/
