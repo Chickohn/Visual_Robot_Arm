@@ -1,5 +1,6 @@
 import os
 import time
+import re
 import gymnasium as gym
 import panda_gym
 import numpy as np
@@ -23,78 +24,10 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 from Camera_Environment import CameraBeakerEnv
 
+
 ### Uncomment the following to switch to the built-in panda reach environment.
 env = gym.make('PandaPickAndPlace-v3', render_mode="human")
 # env = CameraBeakerEnv(render_mode="human")
-# print(env.action_space)
-
-
-# observation, info = env.reset()
-
-# import re
-
-# def parse_action(input_command):
-#     # Default action configuration
-#     action = [0, 0, 0, 0]
-
-#     # Regex to parse commands like 'r5c'
-#     match = re.match(r"([a-z]+)(\d+)?(c)?", input_command)
-#     if match:
-#         command, value, close_gripper = match.groups()
-#         value = float(value) if value else 5
-
-#         value /= 10
-
-#         # Define action mappings
-#         if command == "d":
-#             action[2] = -value
-#         elif command == "u":
-#             action[2] = value
-#         elif command == "o":
-#             action[3] = value
-#         elif command == "c" and not close_gripper:
-#             action[3] = -value
-#         elif command == "b":
-#             action[0] = -value
-#         elif command == "f":
-#             action[0] = value
-#         elif command == "l":
-#             action[1] = value
-#         elif command == "r":
-#             action[1] = -value
-#         elif command == "lift":
-#             action[2] = value
-#             action[3] = -value
-#         elif command == "s":
-#             env.render_camera()
-        
-#         # Check if there's a gripper close command ('c' at the end)
-#         if close_gripper:
-#             action[3] = -0.5
-
-#     return action
-
-# while True:
-#     action = input("\n")
-
-#     if action == "camera":
-#         camera1 = float(input("pos1: "))
-#         camera2 = float(input("pos2: "))
-#         camera3 = float(input("pos3: "))
-#         camera_pos = [camera1, camera2, camera3]
-#         env.render_camera(camera_pos)
-    
-#     if action == "stop":
-#         env.close()
-#         break
-#     action = parse_action(action)
-#     observation, reward, terminated, truncated, info = env.step(action)
-#     # print(env.get_local_grip_position())
-    
-#     if terminated or truncated:
-#         observation, info = env.reset()
-
-# exit()
 
 model_path_1 = "./trained_models/trained_reach.zip"
 model_path_2 = "./Saved_Models/2mil_reach.zip"
