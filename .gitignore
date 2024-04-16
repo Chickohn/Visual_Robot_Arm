@@ -1,24 +1,8 @@
 # Ignore everything in the venv directory
-/venv/**
-
-# Except the directory structure leading to the files you want to keep
-!/venv/Lib/site-packages/panda_gym/
-!/venv/Lib/site-packages/panda_gym/envs/
-!/venv/Lib/site-packages/panda_gym/envs/tasks/
-!/venv/Lib/site-packages/panda_gym/envs/tasks/pick_and_place.py
-!/venv/Lib/site-packages/panda_gym/envs/panda_tasks.py
+/venv/
 
 # Ignore everything in the FastSAM directory
-/FastSAM/**
-
-# Except the directory structure leading to the files you want to keep
-!/FastSAM/Lib/
-!/FastSAM/Lib/site-packages/
-!/FastSAM/Lib/site-packages/panda_gym/
-!/FastSAM/Lib/site-packages/panda_gym/envs/
-!/FastSAM/Lib/site-packages/panda_gym/envs/tasks/
-!/FastSAM/Lib/site-packages/panda_gym/envs/tasks/pick_and_place.py
-!/FastSAM/Lib/site-packages/panda_gym/envs/panda_tasks.py
+/FastSAM/
 
 # Ignore other non-relevant directories and files
 /__pycache__/
