@@ -179,6 +179,10 @@ def setup_manual_control_screen():
     Thread(target=manual_control, daemon=True).start()
 
 def manual_control():
+    """
+    Set up environment for manual control.
+    """
+
     try:
         env = gym.make('PandaPickAndPlace-v3', render_mode="human")
         env.reset()
@@ -210,7 +214,14 @@ def manual_control():
         print(f"Error in manual_control: {e}")  
 
 def setup_training_screen(vision: bool = True):
+    """
+    Setup the screen for training
+    vision: bool = True (Set to False to train without FastSAM Observations)
+    """
     def update_screen(timesteps: int, vision: bool):
+        """
+        Clears the screen to a loading screen while it trains. Training happens on a separate thread.
+        """
         for widget in root.winfo_children():
             widget.destroy()
 
@@ -223,13 +234,16 @@ def setup_training_screen(vision: bool = True):
         back_button.pack(pady=10)
 
     def train(timesteps: int, vision: bool):
+        """
+        Trains a DDPG model on the Custom Beaker Grab environment.
+        """
 
         env = gym.make('PandaPickAndPlace-v3', render_mode="human", vision=vision)
 
         env = make_vec_env(lambda: env, n_envs=1)
 
         n_actions = env.action_space.shape[-1]
-        action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=1.1 * np.ones(n_actions))
+        action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=1.0 * np.ones(n_actions))
 
 
         # Create the DDPG model
@@ -271,16 +285,12 @@ def setup_training_screen(vision: bool = True):
         root.update_idletasks()
         root.geometry(f"{root.winfo_reqwidth()}x{root.winfo_reqheight()}")
 
-
-
-
-    # Clear the window
     for widget in root.winfo_children():
         widget.destroy()
 
     label = tk.Label(root, text= "Input the number of timesteps to train for:")
     label.pack(pady=10)
-    # Create entry field for command input
+
     entry = tk.Entry(root)
     entry.pack(pady=10)
 
@@ -288,12 +298,12 @@ def setup_training_screen(vision: bool = True):
     submit_button.pack(pady=10)
 
 def load_model():
-
-    # Clear the window
+    """
+    Sets up the screen for loading a model. Provides a dropdown box of all the files available in the 'models' folder.
+    """
     for widget in root.winfo_children():
         widget.destroy()
 
-    # Get list of model files in the 'models' directory
     models_dir = 'models'
     try:
         model_files = os.listdir(models_dir)
@@ -301,15 +311,12 @@ def load_model():
         model_files = []
         print("The 'models' directory does not exist.") 
         
-    # Create a Tkinter string variable to hold the selected model
     model_var = tk.StringVar(root)
     model_var.set(model_files[0] if model_files else "No models available")
 
-    # Create a dropdown menu
     model_menu = tk.OptionMenu(root, model_var, *model_files)
     model_menu.pack(pady=20)
 
-    # Create a button to confirm the model selection
     choose_button = tk.Button(root, text="Choose Model", command=lambda: chosen_model(model=model_var.get()))
     choose_button.pack(pady=10)
 
@@ -317,8 +324,9 @@ def load_model():
     back_button.pack(pady=10)
     
 def save_model(model, env):
-    # for widget in root.winfo_children():
-    #     widget.destroy()
+    """
+    Creates a new Tkinter window to enter a name and save your trained model. Closes the window and the environment after saving.
+    """
     save_screen = tk.Tk()
     save_screen.title("Save your model")
     save_screen.geometry("200x200")
@@ -333,9 +341,9 @@ def save_model(model, env):
     name_button.pack()
 
     def save(model, model_name, env):
-        # if model_name == "":
-        #     model.save("models/")
-        # model.save("models/"+ model_name)
+        """
+        Checks if the file exists already and will add a number to the end if it does, then saves it to a 'models' folder.
+        """
         directory = "models/"
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -361,8 +369,9 @@ def save_model(model, env):
         env.close()
         
 def chosen_model(model):
-
-    # Clear the window
+    """
+    Sets up the page for inputting the number of episodes to test your model on.
+    """
     for widget in root.winfo_children():
         widget.destroy()
 
@@ -378,6 +387,10 @@ def chosen_model(model):
     print(command_queue)
 
     def test(episodes, model):
+        """
+        Tests the model on the inputted number of episodes.
+        """
+
         error_label = tk.Label(root, text="Loading Environment...")
         error_label.pack()
 
@@ -442,10 +455,16 @@ def chosen_model(model):
         env.close()
 
 def check_port(port):
+    """
+    Checks if the tensorboard url is active.
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
 
 def load_tensorboard(port=6006):
+    """
+    If tensorboard is not already configured, it will set up the page and open it up automatically.
+    """
     if not check_port(port):
         tb = program.TensorBoard()
         tb.configure(argv=[None, '--logdir', log_dir, '--port', str(port)])

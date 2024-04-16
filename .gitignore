@@ -12,6 +12,8 @@
 /FastSAM/**
 
 # Except the directory structure leading to the files you want to keep
+!/FastSAM/Lib/
+!/FastSAM/Lib/site-packages/
 !/FastSAM/Lib/site-packages/panda_gym/
 !/FastSAM/Lib/site-packages/panda_gym/envs/
 !/FastSAM/Lib/site-packages/panda_gym/envs/tasks/
