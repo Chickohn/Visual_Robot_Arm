@@ -2,6 +2,7 @@
 
 Setup:
 Enter the following into the terminal upon installing the files:
+
 Step 1 - git clone https://github.com/CASIA-IVA-Lab/FastSAM.git
 
 Step 2 - "python -m venv FastSAM"
