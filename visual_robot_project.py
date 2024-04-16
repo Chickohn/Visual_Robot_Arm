@@ -1,4 +1,6 @@
 import os
+import time
+import re
 import gymnasium as gym
 import panda_gym
 import numpy as np
@@ -20,14 +22,12 @@ from sb3_contrib.common.wrappers import TimeFeatureWrapper
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 
-from custom_reach import CustomReachEnv
+from Camera_Environment import CameraBeakerEnv
 
-# Create the environment
-env = CustomReachEnv(render_mode="human")
 
-### Uncomment the following to switch to the built in panda reach environment.
-# env = gym.make('PandaReach-v3', render_mode="human")
-
+### Uncomment the following to switch to the built-in panda reach environment.
+env = gym.make('PandaPickAndPlace-v3', render_mode="human")
+# env = CameraBeakerEnv(render_mode="human")
 
 model_path_1 = "./trained_models/trained_reach.zip"
 model_path_2 = "./Saved_Models/2mil_reach.zip"
@@ -40,31 +40,66 @@ os.makedirs(log_dir, exist_ok=True)
 env = make_vec_env(lambda: env, n_envs=1)
 
 n_actions = env.action_space.shape[-1]
-action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
+action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=1.1 * np.ones(n_actions))
+
 
 # Create the DDPG model
-model = DDPG("MultiInputPolicy", env, action_noise=action_noise, verbose=1, learning_rate=0.0001)
+model = DDPG("MultiInputPolicy", 
+             env, 
+             action_noise=action_noise, 
+             replay_buffer_class=HerReplayBuffer,
+             verbose=1, 
+             batch_size= 512,
+             buffer_size=50_000, 
+             learning_rate=0.001, 
+             tensorboard_log=log_dir
+             )
 
-model.learn(total_timesteps=500000) 
+# model = DDPG.load(("models/ddpg_model_18_38"), env=env)
+# model.batch_size = 512
+# model.action_noise = action_noise
+# model.load_replay_buffer("ddpg_buffer_1712786288.0423434")
 
-model.save("ddpg_model")
 
-# model = DDPG.load("ddpg_model", env=env)
 
-mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=10)
+model.learn(total_timesteps=1_000)
+
+
+# model.save_replay_buffer("ddpg_buffer_"+current_time)
+
+# model = DDPG.load("ddpg_model_05_00.zip", env=env)
+
+mean_reward, std_reward = evaluate_policy(model, model.get_env(), return_episode_rewards=True, n_eval_episodes=5)
 
 print(f"Mean reward: {mean_reward}, Std reward: {std_reward}")
 
 # Test the model
-obs = env.reset()
-for _ in range(1000):
-    action, _states = model.predict(obs, deterministic=True)
-    observation, reward, terminated, truncated, info = env.step(action)
-    # env.render()
-    if terminated or truncated:
-        observation, info = env.reset()
+observation = env.reset()
+for i in range(1000):
+    action, _states = model.predict(observation, deterministic=True)
+
+    observation, reward, done, info = env.step(action)
+    if done:
+        observation = env.reset()
 
 env.close()
+
+# Naming and Saving the file
+from inputimeout import inputimeout, TimeoutOccurred
+from datetime import datetime
+
+now = datetime.now()
+
+current_time = now.strftime("%H:%M")
+current_time = current_time[:2]+'_'+current_time[-2:]
+print(current_time)
+
+try:
+    model_name = inputimeout(prompt="Name the model: ", timeout=120)
+except TimeoutOccurred:
+    model_name = "DDPG_Model_"+current_time
+
+model.save("models/"+ model_name)
 
 
 # if os.path.exists(model_path):

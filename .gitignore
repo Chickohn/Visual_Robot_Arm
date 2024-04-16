@@ -1,7 +1,14 @@
+# Ignore everything in the venv directory
 /venv/
-/venv2/
+
+# Ignore everything in the FastSAM directory
+/FastSAM/
+
+# Ignore other non-relevant directories and files
 /__pycache__/
 /logs/
 /Saved_Models/
 /trained_models/
 /sam_vit_h.pth/
+/weights/
+/models/
