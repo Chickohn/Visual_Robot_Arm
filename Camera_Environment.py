@@ -102,25 +102,26 @@ class CameraBeakerEnv(RobotTaskEnv):
         # ann = prompt_process.everything_prompt()
         # ann = prompt_process.box_prompt(bboxes=[[200, 200, 300, 300]])
         ann = prompt_process.text_prompt(text="a beaker on a table")
+        print(ann)
 
         prompt_process.plot(annotations = ann, output_path ='C:/Users/fredd/Desktop/Dissertation/Visual_Robot_Arm/Output/output.jpg')
         print("post mask")
         cv2.waitKey(1)
 
-# env = CameraBeakerEnv(render_mode="human")
+env = CameraBeakerEnv(render_mode="human")
 
-# observation, info = env.reset()
-# for _ in range(1000):
-#     action = env.action_space.sample()
-#     try:
-#         observation, reward, terminated, truncated, info = env.step(action)
-#     except:
-#         break
+observation, info = env.reset()
+for _ in range(1000):
+    action = env.action_space.sample()
+    try:
+        observation, reward, terminated, truncated, info = env.step(action)
+    except:
+        break
 
-#     # Render camera image
-#     env.render_camera()
+    # Render camera image
+    env.render_camera()
 
-#     if terminated or truncated:
-#         observation, info = env.reset()
+    if terminated or truncated:
+        observation, info = env.reset()
 
-# cv2.destroyAllWindows()
+cv2.destroyAllWindows()

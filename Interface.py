@@ -186,7 +186,6 @@ def manual_control():
     try:
         env = gym.make('PandaPickAndPlace-v3', render_mode="human")
         env.reset()
-        env.render_camera()
 
         while True:
             try:
@@ -194,12 +193,12 @@ def manual_control():
                 command = command_queue.get(timeout=1)  # Adjust timeout as needed
                 print(f"Processing command: {command}")
                 action = parse_action(command, env)
-                if command == "camera":
+                if command == "camera": # If you want to change the position of the camera, mainly for testing purposes
                     camera1 = float(input("pos1: "))
                     camera2 = float(input("pos2: "))
                     camera3 = float(input("pos3: "))
                     camera_pos = [camera1, camera2, camera3]
-                    env.render_camera(camera_pos)
+                    ann = env.render_camera(camera_pos)
                 
                 if command == "stop":
                     env.close()
@@ -233,57 +232,7 @@ def setup_training_screen(vision: bool = True):
         back_button = tk.Button(root, text="Back to Main Menu", command=lambda: setup_initial_screen(restart=True))
         back_button.pack(pady=10)
 
-    def train(timesteps: int, vision: bool):
-        """
-        Trains a DDPG model on the Custom Beaker Grab environment.
-        """
-
-        env = gym.make('PandaPickAndPlace-v3', render_mode="human", vision=vision)
-
-        env = make_vec_env(lambda: env, n_envs=1)
-
-        n_actions = env.action_space.shape[-1]
-        action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=1.0 * np.ones(n_actions))
-
-
-        # Create the DDPG model
-        model = DDPG("MultiInputPolicy", 
-                    env, 
-                    action_noise=action_noise, 
-                    replay_buffer_class=HerReplayBuffer,
-                    verbose=1, 
-                    batch_size= 512,
-                    buffer_size=50_000, 
-                    learning_rate=0.001, 
-                    tensorboard_log=log_dir
-                    )
-        
-        load_tensorboard()
-
-        model.learn(total_timesteps=timesteps)
-
-        mean_reward, std_reward = evaluate_policy(model, model.get_env(), return_episode_rewards=False, n_eval_episodes=25)
-
-        for widget in root.winfo_children():
-            widget.destroy()
-
-        label = tk.Label(root, text="Training Results:")
-        label.pack(pady=10, padx=10)
-
-        mean_label = tk.Label(root, text=f"Mean reward: {mean_reward}")
-        mean_label.pack()
-
-        std_label = tk.Label(root, text=f"Std reward: {std_reward}")
-        std_label.pack()
-
-        save_button = tk.Button(root, text="Save Model", command=lambda: save_model(model, env))
-        save_button.pack(pady=10)
-
-        back_button = tk.Button(root, text="Back to Main Menu", command=lambda: setup_initial_screen(restart=True))
-        back_button.pack(pady=10)
-
-        root.update_idletasks()
-        root.geometry(f"{root.winfo_reqwidth()}x{root.winfo_reqheight()}")
+    # def train
 
     for widget in root.winfo_children():
         widget.destroy()
@@ -296,6 +245,69 @@ def setup_training_screen(vision: bool = True):
 
     submit_button = tk.Button(root, text="Submit", command=lambda: update_screen(timesteps=int(entry.get()), vision=vision))
     submit_button.pack(pady=10)
+
+def train(timesteps: int, vision: bool, subgoal):
+    """
+    Trains a DDPG model on the Custom Beaker Grab environment.
+    """
+
+    env = gym.make('PandaPickAndPlace-v3', render_mode="human", vision=vision, current_subgoal=subgoal)
+
+    env = make_vec_env(lambda: env, n_envs=1)
+
+    n_actions = env.action_space.shape[-1]
+    action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.85 * np.ones(n_actions))
+
+    if vision:
+        # Create the DDPG model
+        model = DDPG("MultiInputPolicy", 
+                env, 
+                action_noise=action_noise, 
+                replay_buffer_class=HerReplayBuffer,
+                verbose=1, 
+                batch_size=32,
+                buffer_size=7_000, 
+                learning_rate=0.001, 
+                tensorboard_log=log_dir
+                )
+    else:
+        model = DDPG("MultiInputPolicy", 
+                env, 
+                action_noise=action_noise, 
+                replay_buffer_class=HerReplayBuffer,
+                verbose=1, 
+                batch_size= 512,
+                buffer_size=50_000, 
+                learning_rate=0.001, 
+                tensorboard_log=log_dir
+                )
+    
+    load_tensorboard()
+
+    model.learn(total_timesteps=timesteps)
+
+    mean_reward, std_reward = evaluate_policy(model, model.get_env(), return_episode_rewards=False, n_eval_episodes=25)
+
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    label = tk.Label(root, text="Training Results:")
+    label.pack(pady=10, padx=10)
+
+    mean_label = tk.Label(root, text=f"Mean reward: {mean_reward}")
+    mean_label.pack()
+
+    std_label = tk.Label(root, text=f"Std reward: {std_reward}")
+    std_label.pack(padx=20)
+
+    save_button = tk.Button(root, text="Save Model", command=lambda: save_model(model, env))
+    save_button.pack(pady=10)
+
+    back_button = tk.Button(root, text="Back to Main Menu", command=lambda: setup_initial_screen(restart=True))
+    back_button.pack(pady=10)
+
+    root.update_idletasks()
+    root.geometry(f"{root.winfo_reqwidth()}x{root.winfo_reqheight()}")
 
 def load_model():
     """
@@ -469,7 +481,7 @@ def load_tensorboard(port=6006):
         tb = program.TensorBoard()
         tb.configure(argv=[None, '--logdir', log_dir, '--port', str(port)])
         url = tb.launch()
-    webbrowser.open(url, new=1)
+    webbrowser.open(url, new=0)
 
 # Main Loop
 command_queue = queue.Queue()
