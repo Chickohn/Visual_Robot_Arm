@@ -212,76 +212,108 @@ def manual_control():
     except Exception as e:
         print(f"Error in manual_control: {e}")  
 
-def setup_training_screen(vision: bool = True):
+def setup_training_screen(vision: bool = True, model: str = "", model_loaded=False):
     """
     Setup the screen for training
     vision: bool = True (Set to False to train without FastSAM Observations)
+    subgoal: str (Which subgoal to achieve)
     """
-    def update_screen(timesteps: int, vision: bool):
+    def update_screen(timesteps: int, vision: bool, subgoal: str = "above", model: str = "", model_loaded=False):
         """
         Clears the screen to a loading screen while it trains. Training happens on a separate thread.
         """
         for widget in root.winfo_children():
             widget.destroy()
 
+        
+
         label = tk.Label(root, text="Training...")
         label.pack(pady=10)
 
-        Thread(target=lambda: train(timesteps=timesteps, vision=vision), daemon=True).start()
+        Thread(target=lambda: train(timesteps=timesteps, vision=vision, subgoal=subgoal, model=model, model_loaded=model_loaded), daemon=True).start()
 
         back_button = tk.Button(root, text="Back to Main Menu", command=lambda: setup_initial_screen(restart=True))
         back_button.pack(pady=10)
 
     # def train
+    def timesteps(vision:bool, subgoal:str, model: str = "", model_loaded: bool = False):
+        for widget in root.winfo_children():
+            widget.destroy()
 
+        label = tk.Label(root, text= "Input the number of timesteps to train for:")
+        label.pack(pady=10)
+
+        entry = tk.Entry(root)
+        entry.pack(pady=10)
+
+        submit_button = tk.Button(root, text="Submit", command=lambda: update_screen(timesteps=int(entry.get()), vision=vision, subgoal=subgoal, model=model, model_loaded=model_loaded))
+
+        submit_button.pack(pady=10)
+    
     for widget in root.winfo_children():
         widget.destroy()
 
-    label = tk.Label(root, text= "Input the number of timesteps to train for:")
-    label.pack(pady=10)
+    label = tk.Label(root, text="Choose a subgoal to train for:")
+    label.pack(pady=10, padx=10)
 
-    entry = tk.Entry(root)
-    entry.pack(pady=10)
+    above_button = tk.Button(root, text="Reach above the beaker", command=lambda: timesteps(vision=vision, subgoal="above", model=model, model_loaded=model_loaded))
+    above_button.pack(pady=10)
 
-    submit_button = tk.Button(root, text="Submit", command=lambda: update_screen(timesteps=int(entry.get()), vision=vision))
-    submit_button.pack(pady=10)
+    pregrab_button = tk.Button(root, text="Prepare to grab the beaker", command=lambda: timesteps(vision=vision, subgoal="pregrab", model=model, model_loaded=model_loaded))
+    pregrab_button.pack(pady=10)
 
-def train(timesteps: int, vision: bool, subgoal):
+    grab_button = tk.Button(root, text="Grab the beaker", command=lambda: timesteps(vision=vision, subgoal="grab", model=model, model_loaded=model_loaded))
+    grab_button.pack(pady=10)
+
+    lift_button = tk.Button(root, text="Lift the beaker to goal", command=lambda: timesteps(vision=vision, subgoal="lift", model=model, model_loaded=model_loaded))
+    lift_button.pack(pady=10)
+
+    back_button = tk.Button(root, text="Back to Main Menu", command=lambda: setup_initial_screen(restart=True))
+    back_button.pack(pady=10)
+
+def train(timesteps: int, vision: bool, subgoal: str, model_loaded: bool = False, model: str = ""):
     """
     Trains a DDPG model on the Custom Beaker Grab environment.
     """
 
-    env = gym.make('PandaPickAndPlace-v3', render_mode="human", vision=vision, current_subgoal=subgoal)
+    env = gym.make('PandaPickAndPlace-v3', render_mode="human", vision=vision, current_subgoal=subgoal) 
+    # env = gym.make('PandaReach-v3', render_mode="human")
 
     env = make_vec_env(lambda: env, n_envs=1)
 
     n_actions = env.action_space.shape[-1]
-    action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.85 * np.ones(n_actions))
+    action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=1 * np.ones(n_actions))
 
-    if vision:
-        # Create the DDPG model
-        model = DDPG("MultiInputPolicy", 
-                env, 
-                action_noise=action_noise, 
-                replay_buffer_class=HerReplayBuffer,
-                verbose=1, 
-                batch_size=32,
-                buffer_size=7_000, 
-                learning_rate=0.001, 
-                tensorboard_log=log_dir
-                )
+    if model_loaded == False:
+        if vision:
+            # Create the DDPG model
+            model = DDPG("MultiInputPolicy", 
+                    env, 
+                    action_noise=action_noise, 
+                    replay_buffer_class=HerReplayBuffer,
+                    verbose=1, 
+                    batch_size=32,
+                    buffer_size=7_000, 
+                    learning_rate=0.001, 
+                    tensorboard_log=log_dir
+                    )
+        else:
+            model = DDPG("MultiInputPolicy", 
+                    env, 
+                    action_noise=action_noise, 
+                    replay_buffer_class=HerReplayBuffer,
+                    verbose=1, 
+                    batch_size= 1024,
+                    buffer_size=100_000, 
+                    learning_rate=0.001, 
+                    tensorboard_log=log_dir
+                    )
     else:
-        model = DDPG("MultiInputPolicy", 
-                env, 
-                action_noise=action_noise, 
-                replay_buffer_class=HerReplayBuffer,
-                verbose=1, 
-                batch_size= 512,
-                buffer_size=50_000, 
-                learning_rate=0.001, 
-                tensorboard_log=log_dir
-                )
-    
+        model_name = model
+        print("models/"+model)
+        model = DDPG.load("models/"+model, env=env)
+        print("Loaded", model_name)
+        
     load_tensorboard()
 
     model.learn(total_timesteps=timesteps)
@@ -386,17 +418,39 @@ def chosen_model(model):
     """
     for widget in root.winfo_children():
         widget.destroy()
+    
+    label = tk.Label(root, text="Would you like to test this model or train it?")
+    label.pack(padx=10, pady=10)
 
-    episodes_label = tk.Label(root, text="Input number of episodes to test:")
-    episodes_label.pack(pady=10)
+    test_button = tk.Button(root, text="Test", command=lambda: test_screen(model))
+    test_button.pack(pady=10)
 
-    entry = tk.Entry(root)
-    entry.pack(pady=10)
+    train_button = tk.Button(root, text="Train", command=lambda: check_if_vision(model))
+    train_button.pack(pady=10)
 
-    submit_button = tk.Button(root, text="Submit", command=lambda: test(int(entry.get()), model))
-    submit_button.pack(pady=10)
+    def check_if_vision(model):
+        for widget in root.winfo_children():
+            widget.destroy()
 
-    print(command_queue)
+        vision_button = tk.Button(root, text="With Vision", command=lambda: setup_training_screen(vision=True, model=model, model_loaded=True))
+        vision_button.pack(pady=10)
+
+        non_vision_button = tk.Button(root, text="Without Vision", command=lambda: setup_training_screen(vision=False, model=model, model_loaded=True))
+        non_vision_button.pack(pady=10, padx=10)
+
+
+    def test_screen(model):
+        for widget in root.winfo_children():
+            widget.destroy()
+
+        episodes_label = tk.Label(root, text="Input number of episodes to test:")
+        episodes_label.pack(pady=10)
+
+        entry = tk.Entry(root)
+        entry.pack(pady=10)
+
+        submit_button = tk.Button(root, text="Submit", command=lambda: test(int(entry.get()), model))
+        submit_button.pack(pady=10)
 
     def test(episodes, model):
         """
@@ -481,7 +535,7 @@ def load_tensorboard(port=6006):
         tb = program.TensorBoard()
         tb.configure(argv=[None, '--logdir', log_dir, '--port', str(port)])
         url = tb.launch()
-    webbrowser.open(url, new=0)
+    # webbrowser.open(url, new=0)
 
 # Main Loop
 command_queue = queue.Queue()

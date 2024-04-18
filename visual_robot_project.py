@@ -22,11 +22,9 @@ from sb3_contrib.common.wrappers import TimeFeatureWrapper
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 
-from Camera_Environment import CameraBeakerEnv
-
 
 ### Uncomment the following to switch to the built-in panda reach environment.
-env = gym.make('PandaPickAndPlace-v3', render_mode="human")
+env = gym.make('PandaPickAndPlace-v3', render_mode="human", vision=False, current_subgoal="grab")
 # env = CameraBeakerEnv(render_mode="human")
 
 model_path_1 = "./trained_models/trained_reach.zip"
@@ -37,23 +35,34 @@ model_path = model_path_1
 log_dir = "./logs/"
 os.makedirs(log_dir, exist_ok=True)
 
-env = make_vec_env(lambda: env, n_envs=1)
+# env = make_vec_env(lambda: env, n_envs=1)
 
 n_actions = env.action_space.shape[-1]
-action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=1.1 * np.ones(n_actions))
+action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
 
+rb_kwargs = {'goal_selection_strategy' : 'future',
+             'n_sampled_goal' : 4}
+
+policy_kwargs = {'net_arch' : [512, 512, 512], 
+                 'n_critics' : 2}
+
+env = TimeFeatureWrapper(env)
+
+model = DDPG(policy="MultiInputPolicy", env=env, replay_buffer_class=HerReplayBuffer, verbose=1, 
+             gamma = 0.95, batch_size= 512, buffer_size=100000, replay_buffer_kwargs = rb_kwargs,
+             learning_rate = 1e-3, action_noise = action_noise, policy_kwargs = policy_kwargs, tensorboard_log=log_dir)
 
 # Create the DDPG model
-model = DDPG("MultiInputPolicy", 
-             env, 
-             action_noise=action_noise, 
-             replay_buffer_class=HerReplayBuffer,
-             verbose=1, 
-             batch_size= 512,
-             buffer_size=50_000, 
-             learning_rate=0.001, 
-             tensorboard_log=log_dir
-             )
+# model = DDPG("MultiInputPolicy", 
+#              env, 
+#              action_noise=action_noise, 
+#              replay_buffer_class=HerReplayBuffer,
+#              verbose=1, 
+#              batch_size=2048,
+#              buffer_size=1_000_000, 
+#              learning_rate=0.001, 
+#              tensorboard_log=log_dir
+#              )
 
 # model = DDPG.load(("models/ddpg_model_18_38"), env=env)
 # model.batch_size = 512
@@ -62,7 +71,7 @@ model = DDPG("MultiInputPolicy",
 
 
 
-model.learn(total_timesteps=1_000)
+model.learn(total_timesteps=500_000)
 
 
 # model.save_replay_buffer("ddpg_buffer_"+current_time)
@@ -95,7 +104,7 @@ current_time = current_time[:2]+'_'+current_time[-2:]
 print(current_time)
 
 try:
-    model_name = inputimeout(prompt="Name the model: ", timeout=120)
+    model_name = inputimeout(prompt="Name the model: ", timeout=300)
 except TimeoutOccurred:
     model_name = "DDPG_Model_"+current_time
 
